@@ -227,6 +227,29 @@ var feature = {
   pop2005: 20000
 }
 //
-window.WFSEdit.insert(feature);
-window.WFSEdit.update(typeAttrs, filter, feature);
-window.WFSEdit.delete(typeAttrs, filter);
+// window.WFSEdit.insert(feature);
+// window.WFSEdit.update(typeAttrs, filter, feature);
+// window.WFSEdit.delete(typeAttrs, filter);
+
+var obj = {
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#ff0000",
+        "marker-size": "medium",
+        "marker-symbol": ""
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.8125,
+          37.43997405227057
+        ]
+      }
+    }
+  ]
+};
+
+console.log(xml(obj, true));
