@@ -72,24 +72,24 @@ var geoJsonToGml = require("./geoJsonToGml");
       return propertyXML;
     }
 
-    function buildInsertFeatureXML(geoJson) {
+    function buildInsertFeatureXML(geoJson, options) {
 
-      return geoJsonToGml(geoJson);
+      return geoJsonToGml(geoJson, options);
     }
 
-    function buildOpertaionXML(operation, typeName, filter, feature) {
+    function buildOpertaionXML(operation, typeName, filter, feature, options) {
       var operationXML, filterQuery, featureQuery;
       if(typeof filter !== "undefined") {
         filterQuery = buildFilterXML(filter);
       }
 
       if(typeof feature !== "undefined" && operation.toLowerCase() === "insert")
-        featureQuery = buildInsertFeatureXML(feature);
+        featureQuery = buildInsertFeatureXML(feature, options);
 
       switch (operation.toLowerCase()) {
         case "insert":
-          operationXML = {"wfs:Insert": [{"_attr": {}}]};
-          operationXML["wfs:Insert"].push(featureQuery);
+          operationXML = {"Insert": [{"_attr": {}}]};
+          operationXML["Insert"].push(featureQuery);
           break;
         case "update":
           operationXML = {"wfs:Update": [{"_attr": {typeName: typeName}}]};
@@ -117,17 +117,17 @@ var geoJsonToGml = require("./geoJsonToGml");
     }
 
 
-    function createWFSRequest(operation, typeName, filter, geoJson) {
+    function createWFSRequest(operation, typeName, filter, geoJson, options) {
       var WFSTransactionRequestXML = buildBaseTransactionXML();
-      var WFSOperationBaseXML = buildOpertaionXML(operation, typeName, filter, geoJson);
+      var WFSOperationBaseXML = buildOpertaionXML(operation, typeName, filter, geoJson, options);
       WFSTransactionRequestXML["wfs:Transaction"].push(WFSOperationBaseXML);
 
       // console.log(WFSTransactionRequestXML);
       return xml(WFSTransactionRequestXML, true);
     }
 
-    function insertFeature(geoJson) {
-      var reqBody = createWFSRequest("Insert", undefined, undefined, geoJson);
+    function insertFeature(geoJson, options) {
+      var reqBody = createWFSRequest("Insert", undefined, undefined, geoJson, options);
       console.log(reqBody);
 
       var url = HOST + "/wfs";
@@ -200,15 +200,15 @@ var geoJsonToGml = require("./geoJsonToGml");
 
 // Testing
 var typeName= "georbis:world_boundaries";
-var filter = { propertyName: "name", literal: "SriLanka"};
+var filter = { propertyName: "name", literal: "ImaginaryNation"};
 var feature = {
   pop2005: "20000",
   name: "Sri Lanka",
   subregion: "34"
 }
 
- window.WFSEdit.update(typeName, filter, feature);
- // window.WFSEdit.delete(typeName, filter);
+ // window.WFSEdit.update(typeName, filter, feature);
+ window.WFSEdit.delete(typeName, filter);
 
 var geoJson = {
   "type": "FeatureCollection",
@@ -216,19 +216,52 @@ var geoJson = {
     {
       "type": "Feature",
       "properties": {
-        "marker-color": "#e20808",
-        "marker-size": "medium",
-        "marker-symbol": "circle"
+        "fis": "IM",
+        "iso2": "IM",
+        "iso3": "IMG",
+        "un": "4",
+        "name": "ImaginaryNation",
+        "area": "65209",
+        "pop2005": "25067407",
+        "region": "142",
+        "subregion": "34",
+        "lon": "62.5",
+        "lat": "3.5"
       },
       "geometry": {
-        "type": "Point",
+        "type": "Polygon",
         "coordinates": [
-          58.71093750000001,
-          58.63121664342478
+          [
+            [
+              60.0,
+              2.0
+            ],
+            [
+              65.0,
+              2.0
+            ],
+            [
+              65.0,
+              5.0
+            ],
+            [
+              60.0,
+              5.0
+            ],
+            [
+              60.0,
+              2.0
+            ]
+          ]
         ]
       }
     }
   ]
 };
 
-// window.WFSEdit.insert(geoJson);
+var options = {
+  featureNs: "georbis",
+  featureName: "world_boundaries"
+};
+
+// window.WFSEdit.insert(geoJson, options);

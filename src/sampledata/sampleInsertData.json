@@ -1,0 +1,48 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "fis": "IM",
+        "iso2": "IM",
+        "iso3": "IMG",
+        "un": "4",
+        "name": "ImaginaryNation",
+        "area": "65209",
+        "pop2005": "25067407",
+        "region": "142",
+        "subregion": "34",
+        "lon": "62.5",
+        "lat": "3.5"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              60.0,
+              2.0
+            ],
+            [
+              65.0,
+              2.0
+            ],
+            [
+              65.0,
+              5.0
+            ],
+            [
+              60.0,
+              5.0
+            ],
+            [
+              60.0,
+              2.0
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

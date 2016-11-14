@@ -1,5 +1,9 @@
-function geoJsonToGml(geoJson) {
+function geoJsonToGml(geoJson, options) {
 
+  var options = options || {
+    featureNs: "wfs",
+    featureName: "features"
+  }
   // The base featureCollection xmlJson without any feature members
   var featureCollectionXmlJson = {
         "wfs:FeatureCollection": [
@@ -38,8 +42,8 @@ function geoJsonToGml(geoJson) {
                         }
                     },
                     {
-                        "feature:features": [{
-                          "_attr": {"xmlns:feature": "http://mapserver.gis.umn.edu/mapserver", "fid": "OpenLayers.Feature.Vector_" + fid_value}
+                        [options.featureNs + ":" + options.featureName]: [{
+                          "_attr": {}
                         },
                         // props will be pushed here
                         // geometry will be pushed here
@@ -50,10 +54,13 @@ function geoJsonToGml(geoJson) {
       // The base feature member xmlJson skeleton without any props and geometry
 
       var geometryXmlJson = {
-        "feature:geometry" : [
-        {
-          // geomSkeliton will be added here with proper geometry type
-        }
+        "geom" : [
+          {
+            "_attr": {"xmlns": "http://www.vizexperts.com"}
+          },
+          {
+            // geomSkeliton will be added here with proper geometry type
+          }
       ]};
 
       var geomSkeliton = [
@@ -66,24 +73,24 @@ function geoJsonToGml(geoJson) {
             }
           ];
 
-    var featuresNode = featureMembersXmlJson["gml:featureMember"][1]["feature:features"];
+    var featuresNode = featureMembersXmlJson["gml:featureMember"][1][options.featureNs + ":" + options.featureName];
 
     var geomtype = "gml:" + vectorType;
-    geometryXmlJson["feature:geometry"][0][geomtype] = geomSkeliton;
+    geometryXmlJson["geom"][1][geomtype] = geomSkeliton;
     featuresNode.push(geometryXmlJson);
 
     var properties = features[feature].properties;
     for(prop in properties) {
         if(properties.hasOwnProperty(prop)) {
             var propObj = {};
-            propObj["feature:" + prop] = properties[prop]
+            propObj["georbis:" + prop] = properties[prop]
             featuresNode.push(propObj);
         }
     }
 
     var coordinates = geometry.coordinates;
 
-    var coordinatesArr = geometryXmlJson["feature:geometry"][0][geomtype][0]["gml:coordinates"];
+    var coordinatesArr = geometryXmlJson["geom"][1][geomtype][0]["gml:coordinates"];
     var coordinateStr = "";
     for(coor in coordinates) {
       coordinateStr += coordinates[coor] + ",";
