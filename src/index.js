@@ -1,5 +1,6 @@
 var axios = require("axios");
 var xml = require("xml");
+var geoJsonToGml = require("./geoJsonToGml");
 
 (function(window, axios, xml) {
   "user strict";
@@ -50,7 +51,7 @@ var xml = require("xml");
                 }
               },
               {
-                "PropertyName": filter.PropertyName
+                "PropertyName": filter.propertyName
               },
               {
                 "Literal": filter.literal
@@ -75,15 +76,12 @@ var xml = require("xml");
       return propertyXML;
     }
 
-    function buildInsertFeatureXML(feature) {
+    function buildInsertFeatureXML(geoJson) {
 
-
-      return {
-        feature: "lksjdfj"
-      }
+      return geoJsonToGml(geoJson);
     }
 
-    function buildOpertaionXML(operation, attrs, filter, features) {
+    function buildOpertaionXML(operation, attrs, filter, feature) {
       var operationXML, filterQuery, featureQuery;
       if(typeof filter !== "undefined" && typeof attrs !== "undefined") {
         var name = attrs.name;
@@ -121,35 +119,17 @@ var xml = require("xml");
     }
 
 
-    function createWFSRequest(operation, feature) {
+    function createWFSRequest(operation, typeAttrs, filter, geoJson) {
       var WFSTransactionRequestXML = buildBaseTransactionXML();
-      var WFSOperationBaseXML = buildOpertaionXML(operation, feature);
+      var WFSOperationBaseXML = buildOpertaionXML(operation, typeAttrs, filter, geoJson);
       WFSTransactionRequestXML["wfs:Transaction"].push(WFSOperationBaseXML);
 
       console.log(WFSTransactionRequestXML);
       return xml(WFSTransactionRequestXML, true);
     }
 
-    function createWFSRequest(operation, typeAttrs, filter) {
-      var WFSTransactionRequestXML = buildBaseTransactionXML();
-      var WFSOperationBaseXML = buildOpertaionXML(operation, typeAttrs, filter);
-      WFSTransactionRequestXML["wfs:Transaction"].push(WFSOperationBaseXML);
-
-      console.log(WFSTransactionRequestXML);
-      return xml(WFSTransactionRequestXML, true);
-    }
-
-    function createWFSRequest(operation, typeAttrs, filter, feature) {
-      var WFSTransactionRequestXML = buildBaseTransactionXML();
-      var WFSOperationBaseXML = buildOpertaionXML(operation, typeAttrs, filter, feature);
-      WFSTransactionRequestXML["wfs:Transaction"].push(WFSOperationBaseXML);
-
-      console.log(WFSTransactionRequestXML);
-      return xml(WFSTransactionRequestXML, true);
-    }
-
-    function insertFeature(feature) {
-      var reqBody = createWFSRequest("Insert", feature);
+    function insertFeature(geoJson) {
+      var reqBody = createWFSRequest("Insert", undefined, undefined, geoJson);
       console.log(reqBody);
 
       var url = HOST + "/maps?service=WFS&version=1.1.0&request=Transaction";
@@ -189,7 +169,7 @@ var xml = require("xml");
 
 
     function deleteFeature(typeAttrs, filter) {
-      var reqBody = createWFSRequest("Delete", typeAttrs, filter);
+      var reqBody = createWFSRequest("Delete", typeAttrs, filter, undefined);
       console.log(reqBody);
 
       var url = HOST + "/maps?service=WFS&version=1.0.0&request=Transaction";
@@ -226,7 +206,29 @@ var filter = { propertyName: "name", literal: "Sri Lanka"};
 var feature = {
   pop2005: 20000
 }
-//
-//  window.WFSEdit.insert(feature);
-//  window.WFSEdit.update(typeAttrs, filter, feature);
-//  window.WFSEdit.delete(typeAttrs, filter);
+
+ window.WFSEdit.update(typeAttrs, filter, feature);
+ window.WFSEdit.delete(typeAttrs, filter);
+
+var geoJson = {
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "marker-color": "#ff0000",
+        "marker-size": "medium",
+        "marker-symbol": "sym"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.8125,
+          37.43997405227057
+        ]
+      }
+    }
+  ]
+};
+
+window.WFSEdit.insert(geoJson);

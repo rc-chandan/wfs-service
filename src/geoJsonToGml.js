@@ -95,3 +95,5 @@ function geoJsonToGml(geoJson) {
 
   return featureCollectionXmlJson;
 }
+
+module.exports = geoJsonToGml;
