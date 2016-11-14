@@ -66,13 +66,9 @@ var geoJsonToGml = require("./geoJsonToGml");
 
     function buildUpdateFeatureXML(feature) {
       var propertyXML = {"wfs:Property": [{"_attr": {}}]};
-      for(prop in feature) {
-        if(feature.hasOwnProperty(prop)){
-          var value = feature[prop];
-          propertyXML["wfs:Property"].push({"wfs:Name": prop});
-          propertyXML["wfs:Property"].push({"wfs:Value": value});
-        }
-      }
+      propertyXML["wfs:Property"].push({"wfs:Name": prop});
+      propertyXML["wfs:Property"].push({"wfs:Value": feature[prop]});
+
       return propertyXML;
     }
 
@@ -87,9 +83,6 @@ var geoJsonToGml = require("./geoJsonToGml");
         filterQuery = buildFilterXML(filter);
       }
 
-      if(typeof feature !== "undefined" && operation.toLowerCase() === "update")
-        featureQuery = buildUpdateFeatureXML(feature);
-
       if(typeof feature !== "undefined" && operation.toLowerCase() === "insert")
         featureQuery = buildInsertFeatureXML(feature);
 
@@ -100,7 +93,16 @@ var geoJsonToGml = require("./geoJsonToGml");
           break;
         case "update":
           operationXML = {"wfs:Update": [{"_attr": {typeName: typeName}}]};
-          operationXML["wfs:Update"].push(featureQuery);
+          for(prop in feature) {
+            if(feature.hasOwnProperty(prop)){
+              featureQuery = buildUpdateFeatureXML((function (feature, prop) {
+                var featureObj = {};
+                featureObj[prop] = feature[prop];
+                return featureObj;
+              }(feature, prop)));
+              operationXML["wfs:Update"].push(featureQuery);
+            }
+          }
           operationXML["wfs:Update"].push(filterQuery);
           break;
         case "delete":
@@ -198,9 +200,11 @@ var geoJsonToGml = require("./geoJsonToGml");
 
 // Testing
 var typeName= "georbis:world_boundaries";
-var filter = { propertyName: "name", literal: "Sri Lanka"};
+var filter = { propertyName: "name", literal: "SriLanka"};
 var feature = {
-  pop2005: "20000"
+  pop2005: "20000",
+  name: "Sri Lanka",
+  subregion: "34"
 }
 
  window.WFSEdit.update(typeName, filter, feature);
