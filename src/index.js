@@ -20,14 +20,14 @@ var geoJsonToGml = require("./geoJsonToGml");
         "wfs:Transaction": [
           {
             "_attr": {
-              "version": "1.0.0",
-              "service": "WFS",
               "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-              "xsi:schemaLocation": "http://www.vizexperts.com/",
+              "xsi:schemaLocation": "http://www.opengis.net/wfs",
               "xmlns:gml": "http://www.opengis.net/gml",
               "xmlns:wfs": "http://www.opengis.net/wfs",
               "xmlns:ogc": "http://www.opengis.net/ogc",
-              "xmlns:georbis": "http://www.vizexperts.com/"
+              "xmlns:georbis": "http://www.vizexperts.com/",
+              "service": "WFS",
+              "version": "1.0.0"
             }
           }
         ]
@@ -70,7 +70,7 @@ var geoJsonToGml = require("./geoJsonToGml");
         if(feature.hasOwnProperty(prop)){
           var value = feature[prop];
           propertyXML["wfs:Property"].push({"wfs:Name": prop});
-          propertyXML["wfs:Property"].push({"wfs:Value": value})
+          propertyXML["wfs:Property"].push({"wfs:Value": value});
         }
       }
       return propertyXML;
@@ -81,11 +81,9 @@ var geoJsonToGml = require("./geoJsonToGml");
       return geoJsonToGml(geoJson);
     }
 
-    function buildOpertaionXML(operation, attrs, filter, feature) {
+    function buildOpertaionXML(operation, typeName, filter, feature) {
       var operationXML, filterQuery, featureQuery;
-      if(typeof filter !== "undefined" && typeof attrs !== "undefined") {
-        var name = attrs.name;
-        var value = attrs.value;
+      if(typeof filter !== "undefined") {
         filterQuery = buildFilterXML(filter);
       }
 
@@ -101,12 +99,12 @@ var geoJsonToGml = require("./geoJsonToGml");
           operationXML["wfs:Insert"].push(featureQuery);
           break;
         case "update":
-          operationXML = {"wfs:Update": [{"_attr": {name: value}}]};
+          operationXML = {"wfs:Update": [{"_attr": {typeName: typeName}}]};
           operationXML["wfs:Update"].push(featureQuery);
           operationXML["wfs:Update"].push(filterQuery);
           break;
         case "delete":
-          operationXML = {"wfs:Delete": [{"_attr": {name: value}}]};
+          operationXML = {"wfs:Delete": [{"_attr": {typeName: typeName}}]};
           operationXML["wfs:Delete"].push(filterQuery);
           break;
         default:
@@ -117,9 +115,9 @@ var geoJsonToGml = require("./geoJsonToGml");
     }
 
 
-    function createWFSRequest(operation, typeAttrs, filter, geoJson) {
+    function createWFSRequest(operation, typeName, filter, geoJson) {
       var WFSTransactionRequestXML = buildBaseTransactionXML();
-      var WFSOperationBaseXML = buildOpertaionXML(operation, typeAttrs, filter, geoJson);
+      var WFSOperationBaseXML = buildOpertaionXML(operation, typeName, filter, geoJson);
       WFSTransactionRequestXML["wfs:Transaction"].push(WFSOperationBaseXML);
 
       // console.log(WFSTransactionRequestXML);
@@ -130,7 +128,7 @@ var geoJsonToGml = require("./geoJsonToGml");
       var reqBody = createWFSRequest("Insert", undefined, undefined, geoJson);
       console.log(reqBody);
 
-      var url = HOST + "/maps?service=WFS&version=1.1.0&request=Transaction";
+      var url = HOST + "/wfs";
       var params = {
         data: reqBody,
       }
@@ -146,11 +144,11 @@ var geoJsonToGml = require("./geoJsonToGml");
     }
 
 
-    function updateFeature(typeAttrs, filter, feature) {
-      var reqBody = createWFSRequest("Update", typeAttrs, filter, feature);
+    function updateFeature(typeName, filter, feature) {
+      var reqBody = createWFSRequest("Update", typeName, filter, feature);
       console.log(reqBody);
 
-      var url = HOST + "/maps?service=WFS&version=1.1.0&request=Transaction";
+      var url = HOST + "/wfs";
       var params = {
         data: reqBody,
       }
@@ -159,18 +157,18 @@ var geoJsonToGml = require("./geoJsonToGml");
         headers: {'Content-Type': 'application/xml'}
       });
 
-      // xhr.put(url, reqBody)
-      // .catch(function(error) {
-      //   console.log(error);
-      // });
+      xhr.post(url, reqBody)
+      .catch(function(error) {
+        console.log(error);
+      });
     }
 
 
-    function deleteFeature(typeAttrs, filter) {
-      var reqBody = createWFSRequest("Delete", typeAttrs, filter, undefined);
+    function deleteFeature(typeName, filter) {
+      var reqBody = createWFSRequest("Delete", typeName, filter, undefined);
       console.log(reqBody);
 
-      var url = HOST + "/maps?service=WFS&version=1.0.0&request=Transaction";
+      var url = HOST + "/wfs";
       var params = {
         data: reqBody,
       }
@@ -179,10 +177,10 @@ var geoJsonToGml = require("./geoJsonToGml");
         headers: {'Content-Type': 'application/xml'}
       });
 
-      // xhr.delete(url, reqBody)
-      // .catch(function(error) {
-      //   console.log(error);
-      // });
+      xhr.post(url, reqBody)
+      .catch(function(error) {
+        console.log(error);
+      });
     }
 
 
@@ -199,14 +197,14 @@ var geoJsonToGml = require("./geoJsonToGml");
 
 
 // Testing
-var typeAttrs= {name: "typeName", value: "georbis:world_boundaries"}
-var filter = { propertyName: "name", literal: "ImaginaryNation"};
+var typeName= "georbis:world_boundaries";
+var filter = { propertyName: "name", literal: "Sri Lanka"};
 var feature = {
   pop2005: "20000"
 }
 
- window.WFSEdit.update(typeAttrs, filter, feature);
- window.WFSEdit.delete(typeAttrs, filter);
+ window.WFSEdit.update(typeName, filter, feature);
+ // window.WFSEdit.delete(typeName, filter);
 
 var geoJson = {
   "type": "FeatureCollection",
