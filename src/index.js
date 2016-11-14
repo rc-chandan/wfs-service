@@ -95,8 +95,6 @@ var geoJsonToGml = require("./geoJsonToGml");
       if(typeof feature !== "undefined" && operation.toLowerCase() === "insert")
         featureQuery = buildInsertFeatureXML(feature);
 
-
-
       switch (operation.toLowerCase()) {
         case "insert":
           operationXML = {"wfs:Insert": [{"_attr": {}}]};
@@ -124,7 +122,7 @@ var geoJsonToGml = require("./geoJsonToGml");
       var WFSOperationBaseXML = buildOpertaionXML(operation, typeAttrs, filter, geoJson);
       WFSTransactionRequestXML["wfs:Transaction"].push(WFSOperationBaseXML);
 
-      console.log(WFSTransactionRequestXML);
+      // console.log(WFSTransactionRequestXML);
       return xml(WFSTransactionRequestXML, true);
     }
 
@@ -202,9 +200,9 @@ var geoJsonToGml = require("./geoJsonToGml");
 
 // Testing
 var typeAttrs= {name: "typeName", value: "georbis:world_boundaries"}
-var filter = { propertyName: "name", literal: "Sri Lanka"};
+var filter = { propertyName: "name", literal: "ImaginaryNation"};
 var feature = {
-  pop2005: 20000
+  pop2005: "20000"
 }
 
  window.WFSEdit.update(typeAttrs, filter, feature);
@@ -216,19 +214,19 @@ var geoJson = {
     {
       "type": "Feature",
       "properties": {
-        "marker-color": "#ff0000",
+        "marker-color": "#e20808",
         "marker-size": "medium",
-        "marker-symbol": "sym"
+        "marker-symbol": "circle"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          2.8125,
-          37.43997405227057
+          58.71093750000001,
+          58.63121664342478
         ]
       }
     }
   ]
 };
 
-window.WFSEdit.insert(geoJson);
+// window.WFSEdit.insert(geoJson);
