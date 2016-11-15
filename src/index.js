@@ -1,12 +1,12 @@
-var axios = require("axios");
-var xml = require("xml");
-var geoJsonToGml = require("./geoJsonToGml");
+let axios = require("axios");
+let xml = require("xml");
+let geoJsonToGml = require("./geoJsonToGml");
 
-(function(window, axios, xml) {
+(function(window, axios, xml, geoJsonToGml) {
   "user strict";
 
-  var VERSION = "0.0.1";
-  var HOST = "http://localhost:19090";
+  let VERSION = "0.0.1";
+  let HOST = "http://localhost:19090";
 
   if(axios === "undefined")
     throw new Error("axios lib not found");
@@ -14,27 +14,51 @@ var geoJsonToGml = require("./geoJsonToGml");
   if(xml === "undefined")
     throw new Error("xml lib not found");
 
-
-    var buildBaseTransactionXML = function () {
-     return  {
-        "wfs:Transaction": [
+  let getTransactionXmlJson = function (operation, WFSOperationBaseXML) {
+    let transactionXML = null;
+    if(operation.toLowerCase() === "insert"){
+        transactionXML = {
+        "Transaction": [
           {
             "_attr": {
-              "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-              "xsi:schemaLocation": "http://www.opengis.net/wfs",
-              "xmlns:gml": "http://www.opengis.net/gml",
-              "xmlns:wfs": "http://www.opengis.net/wfs",
-              "xmlns:ogc": "http://www.opengis.net/ogc",
-              "xmlns:georbis": "http://www.vizexperts.com/",
               "service": "WFS",
-              "version": "1.0.0"
+              "version": "1.0.0",
+              "xmlns": "http://www.opengis.net/wfs",
+              "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+              "xsi:schemaLocation": "http://www.vizexperts.com/",
+              "xmlns:gml": "http://www.opengis.net/gml",
+              "xmlns:georbis": "http://www.vizexperts.com/"
             }
-          }
+          },
+          // OperationXML will be pushed here
         ]
-      }
-    };
+      };
 
-    function buildFilterXML(filter) {
+        transactionXML["Transaction"].push(WFSOperationBaseXML);
+      }else {
+          transactionXML = {
+          "wfs:Transaction": [
+            {
+              "_attr": {
+                "service": "WFS",
+                "version": "1.0.0",
+                "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+                "xsi:schemaLocation": "http://www.opengis.net/wfs",
+                "xmlns:gml": "http://www.opengis.net/gml",
+                "xmlns:wfs": "http://www.opengis.net/wfs",
+                "xmlns:ogc": "http://www.opengis.net/ogc"
+              }
+            },
+            // OperationXML will be pushed here
+          ]
+        };
+        transactionXML["wfs:Transaction"].push(WFSOperationBaseXML);
+      }
+
+      return transactionXML;
+  };
+
+    var buildFilterXML = function (filter) {
 
       var filterQuery = {
         "ogc:Filter": [
@@ -54,7 +78,7 @@ var geoJsonToGml = require("./geoJsonToGml");
                 "PropertyName": filter.propertyName
               },
               {
-                "Literal": filter.literal
+                "Literal": filter.value
               }
             ]
           }
@@ -68,12 +92,10 @@ var geoJsonToGml = require("./geoJsonToGml");
       var propertyXML = {"wfs:Property": [{"_attr": {}}]};
       propertyXML["wfs:Property"].push({"wfs:Name": prop});
       propertyXML["wfs:Property"].push({"wfs:Value": feature[prop]});
-
       return propertyXML;
     }
 
     function buildInsertFeatureXML(geoJson, options) {
-
       return geoJsonToGml(geoJson, options);
     }
 
@@ -116,13 +138,10 @@ var geoJsonToGml = require("./geoJsonToGml");
       return operationXML;
     }
 
-
     function createWFSRequest(operation, typeName, filter, geoJson, options) {
-      var WFSTransactionRequestXML = buildBaseTransactionXML();
       var WFSOperationBaseXML = buildOpertaionXML(operation, typeName, filter, geoJson, options);
-      WFSTransactionRequestXML["wfs:Transaction"].push(WFSOperationBaseXML);
-
-      // console.log(WFSTransactionRequestXML);
+      var WFSTransactionRequestXML = getTransactionXmlJson(operation, WFSOperationBaseXML);
+      // console.log(JSON.stringify(WFSTransactionRequestXML));
       return xml(WFSTransactionRequestXML, true);
     }
 
@@ -139,10 +158,10 @@ var geoJsonToGml = require("./geoJsonToGml");
         headers: {'Content-Type': 'application/xml'}
       });
 
-      // xhr.post(url, reqBody)
-      // .catch(function(error) {
-      //   console.log(error);
-      // });
+      xhr.post(url, reqBody)
+      .catch(function(error) {
+        console.log(error);
+      });
     }
 
 
@@ -185,8 +204,6 @@ var geoJsonToGml = require("./geoJsonToGml");
       });
     }
 
-
-
     var WFSEdit = {};
     WFSEdit.insert = insertFeature;
     WFSEdit.update = updateFeature;
@@ -194,17 +211,24 @@ var geoJsonToGml = require("./geoJsonToGml");
 
     window.WFSEdit = WFSEdit;
 
-
-}(window, axios, xml));
+})(window, axios, xml, geoJsonToGml);
 
 
 // Testing
 var typeName= "georbis:world_boundaries";
-var filter = { propertyName: "name", literal: "ImaginaryNation"};
+var filter = { propertyName: "name", value: "ImaginaryNation"};
 var feature = {
-  pop2005: "20000",
-  name: "Sri Lanka",
-  subregion: "34"
+  "fips": "IM",
+  "iso2": "IM",
+  "iso3": "IMG",
+  "un": "4",
+  "name": "ImaginaryNation",
+  "area": "65209",
+  "pop2005": "25067407",
+  "region": "142",
+  "subregion": "34",
+  "lon": "62.5",
+  "lat": "3.5"
 }
 
  // window.WFSEdit.update(typeName, filter, feature);
@@ -216,7 +240,7 @@ var geoJson = {
     {
       "type": "Feature",
       "properties": {
-        "fis": "IM",
+        "fips": "IM",
         "iso2": "IM",
         "iso3": "IMG",
         "un": "4",
@@ -229,7 +253,7 @@ var geoJson = {
         "lat": "3.5"
       },
       "geometry": {
-        "type": "Polygon",
+        "type": "LineString",
         "coordinates": [
           [
             [
@@ -238,18 +262,6 @@ var geoJson = {
             ],
             [
               65.0,
-              2.0
-            ],
-            [
-              65.0,
-              5.0
-            ],
-            [
-              60.0,
-              5.0
-            ],
-            [
-              60.0,
               2.0
             ]
           ]
@@ -263,5 +275,4 @@ var options = {
   featureNs: "georbis",
   featureName: "world_boundaries"
 };
-
 // window.WFSEdit.insert(geoJson, options);
