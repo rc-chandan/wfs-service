@@ -80,41 +80,51 @@ let geoJsonToGml = require("./geoJsonToGml");
 
   let buildUpdateFeatureXML = function (feature) {
     var propertyXML = {"wfs:Property": [{"_attr": {}}]};
-    propertyXML["wfs:Property"].push({"wfs:Name": prop});
-    propertyXML["wfs:Property"].push({"wfs:Value": feature[prop]});
+    propertyXML["wfs:Property"].push({"wfs:Name": feature.name});
+    propertyXML["wfs:Property"].push({"wfs:Value": feature.value});
     return propertyXML;
   }
 
   let buildInsertFeatureXML = function (geoJson, typeName) {
-    return geoJsonToGml(geoJson, typeName);
+    return geoJsonToGml.convertToGml(geoJson, typeName);
   }
 
-  let buildOpertaionXML = function (operation, typeName, fid, feature, typeName) {
+  let buildOpertaionXML = function (operation, typeName, fid, geoJson) {
     let operationXML, filterQuery, featureQuery;
     if(typeof fid !== "undefined") {
       filterQuery = buildFilterXML(fid);
     }
 
-    if(typeof feature !== "undefined" && operation.toLowerCase() === "insert")
-      featureQuery = buildInsertFeatureXML(feature, typeName);
+    if(typeof geoJson !== "undefined" && operation.toLowerCase() === "insert")
+      gmlQuery = buildInsertFeatureXML(geoJson, typeName);
 
     switch (operation.toLowerCase()) {
       case "insert":
         operationXML = {"Insert": [{"_attr": {"xmlns": "http://www.opengis.net/wfs"}}]};
-        operationXML["Insert"].push(featureQuery);
+        operationXML["Insert"].push(gmlQuery);
         break;
       case "update":
         operationXML = {"wfs:Update": [{"_attr": {"typeName": typeName}}]};
-        // for(prop in feature) {
-        //   if(feature.hasOwnProperty(prop)){
-        //     featureQuery = buildUpdateFeatureXML((function (feature, prop) {
-        //       let featureObj = {};
-        //       featureObj[prop] = feature[prop];
-        //       return featureObj;
-        //     }(feature, prop)));
-        //     operationXML["wfs:Update"].push(featureQuery);
-        //   }
-        // }
+        let properties = geoJson.features[0].properties;
+        for(prop in properties) {
+          if(properties.hasOwnProperty(prop)){
+            gmlQuery = buildUpdateFeatureXML((function (geoJson, prop) {
+              let featureObj = {name: prop, value: properties[prop]};
+              return featureObj;
+            }(properties, prop)));
+            operationXML["wfs:Update"].push(gmlQuery);
+          }
+        }
+
+        if(typeof geoJson.features[0].geometry === "object") {
+          let geom = geoJson.features[0].geometry;
+          let vectorType = geom.type;
+          // let geomQuery = geoJsonToGml.getGeomForUpdate(vectorType);
+          let geomQuery = geoJsonToGml.getGeomForUpdate(vectorType, geom);
+          console.log(JSON.stringify(geomQuery));
+          operationXML["wfs:Update"].push(buildUpdateFeatureXML({name: "geom", value: [geomQuery.geom[1]]}));
+        }
+
         operationXML["wfs:Update"].push(filterQuery);
         break;
       case "delete":
@@ -151,8 +161,8 @@ let geoJsonToGml = require("./geoJsonToGml");
     });
   }
 
-  let updateFeature = function (typeName, fid, feature) {
-    let reqBody = createWFSRequest("Update", typeName, fid, feature);
+  let updateFeature = function (typeName, fid, geoJson) {
+    let reqBody = createWFSRequest("Update", typeName, fid, geoJson);
     let url = HOST + "/wfs";
     let params = {
       data: reqBody,

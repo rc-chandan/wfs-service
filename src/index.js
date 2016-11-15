@@ -10,7 +10,7 @@ var geoJson = {
         "iso2": "IM",
         "iso3": "IMG",
         "un": "4",
-        "name": "Chandan",
+        "name": "Updated",
         "area": "65209",
         "pop2005": "25067407",
         "region": "142",
@@ -22,11 +22,11 @@ var geoJson = {
         "type": "Polygon",
         "coordinates": [
           [
-            [60.0,2.0],
+            [55.0,2.0],
             [65.0,2.0],
             [65.0,5.0],
-            [60.0,5.0],
-            [60.0,2.0]
+            [55.0,5.0],
+            [55.0,2.0]
           ]
         ]
       }
@@ -35,13 +35,8 @@ var geoJson = {
 };
 
 var typeName = "georbis:world_boundaries";
-var fid = "world_boundaries.308";
+var fid = "world_boundaries.335";
 
-var feature = {
-  "pop2005": "2000000",
-  "un": 34
-}
-
-// window.WFSEdit.delete(typeName, fid);
-// window.WFSEdit.update(typeName, fid, feature);
- window.WFSEdit.insert(typeName, geoJson);
+window.WFSEdit.delete(typeName, fid);
+// window.WFSEdit.update(typeName, fid, geoJson);
+ // window.WFSEdit.insert(typeName, geoJson);
