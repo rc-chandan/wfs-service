@@ -1,9 +1,6 @@
-function geoJsonToGml(geoJson, options) {
+function geoJsonToGml(geoJson, typeName) {
 
-  var options = options || {
-    featureNs: "wfs",
-    featureName: "features"
-  }
+  var typeName = typeName || "wfs:features";
 
   function getVectorXmlJson (vectorType) {
     let pointSkeliton = {
@@ -11,9 +8,6 @@ function geoJsonToGml(geoJson, options) {
         { "_attr": {"srsName": "EPSG:4326"}},
         {
           "gml:coordinates": [
-            {
-              "_attr":{"decimal": ".", "cs":",", "ts":" "}
-            },
             // Coordinate values will be pushed here
           ]
         }
@@ -25,9 +19,6 @@ function geoJsonToGml(geoJson, options) {
         { "_attr": {"srsName": "EPSG:4326"}},
         {
           "gml:coordinates": [
-            {
-              "_attr":{"decimal": ".", "cs":",", "ts":" "}
-            },
             // Coordinate values will be pushed here
           ]
         }
@@ -38,14 +29,12 @@ function geoJsonToGml(geoJson, options) {
         "gml:MultiPolygon": [
           { "_attr":{"srsName": "EPSG:4326"}},
           {
-            "gml:PolygonMember": [{
+            "gml:polygonMember": [{
                 "gml:Polygon":[{
                   "gml:outerBoundaryIs": [{
                     "gml:LinearRing": [{
                       "gml:coordinates": [
-                        {
-                          "_attr":{"decimal": ".", "cs":",", "ts":" "}
-                        },
+
                         // Coordinate values will be pushed here
                       ]
                     }]
@@ -81,13 +70,26 @@ function geoJsonToGml(geoJson, options) {
         coordinatesArr = geometryXmlJson["geom"][1]["gml:LineString"][1]["gml:coordinates"];;
         break;
       case "polygon":
-        coordinatesArr = geometryXmlJson["geom"][1]["gml:MultiPolygon"][1]["gml:PolygonMember"][0]["gml:Polygon"][0]["gml:outerBoundaryIs"][0]["gml:LinearRing"][0]["gml:coordinates"];
+        coordinatesArr = geometryXmlJson["geom"][1]["gml:MultiPolygon"][1]["gml:polygonMember"][0]["gml:Polygon"][0]["gml:outerBoundaryIs"][0]["gml:LinearRing"][0]["gml:coordinates"];
         break;
     }
     return coordinatesArr;
   }
 
-    function getCoorinateStr(coordinates) {
+    function getGeomXmlJson(vectorType) {
+      let geomXmlJson = {
+        "geom" : [
+          {
+            "_attr": {"xmlns": "http://www.vizexperts.com/"}
+          }
+          // geomSkeliton will be added here with proper geometry type
+      ]};
+      let vectorData =  getVectorXmlJson(vectorType);
+      geomXmlJson["geom"].push(vectorData);
+      return geomXmlJson;
+    }
+
+    function getCoordinateStr(coordinates) {
       let coordinateStr = "";
       for(let pair in coordinates) {
         for(let num in coordinates[pair]){
@@ -96,13 +98,17 @@ function geoJsonToGml(geoJson, options) {
         coordinateStr = coordinateStr.slice(0, coordinateStr.length - 1);
         coordinateStr += " ";
       }
-
+      coordinateStr = coordinateStr.slice(0, coordinateStr.length - 1);
       return coordinateStr;
     }
 
     // The base featureCollection xmlJson
     featureCollectionXmlJson = {
-      [options.featureNs + ":" + options.featureName]: []
+      [typeName]: [
+        {
+          "_attr": {"xmlns": "http://www.vizexperts.com/"}
+        },
+      ]
     };
 
     // Get all the features in given geoJson and loop through it
@@ -110,27 +116,8 @@ function geoJsonToGml(geoJson, options) {
     for(let feature in features) {
       let geometry = features[feature].geometry;
       let vectorType = geometry.type;
-
-      let fid_value = 9;
-      if(vectorType.localeCompare("LineString") === 0){
-        fid_value = 13;
-      }
-      else if(vectorType.localeCompare("Polygon") === 0){
-        fid_value = 22;
-      }
-
-      let geometryXmlJson = {
-        "geom" : [
-          {
-            "_attr": {"xmlns": "http://www.vizexperts.com"}
-          }
-          // geomSkeliton will be added here with proper geometry type
-      ]};
-
-      let featuresNode = featureCollectionXmlJson[options.featureNs + ":" + options.featureName];
-      let vectorData =  getVectorXmlJson(vectorType);
-
-      geometryXmlJson["geom"].push(vectorData);
+      let featuresNode = featureCollectionXmlJson[typeName];
+      let geometryXmlJson = getGeomXmlJson(vectorType);
       featuresNode.push(geometryXmlJson);
 
       let properties = features[feature].properties;
@@ -142,9 +129,14 @@ function geoJsonToGml(geoJson, options) {
           }
       }
 
-      let coordinates = geometry.coordinates[0];
+      let coordinates = [];
+      if(vectorType.toLowerCase() === "point")
+        coordinates.push(geometry.coordinates);
+      else
+        coordinates = geometry.coordinates[0]
+
       let coordinatesArr = getCoordinateArrayLocation(vectorType, geometryXmlJson);
-      coordinatesArr.push(getCoorinateStr(coordinates));
+      coordinatesArr.push(getCoordinateStr(coordinates));
     }
 
     return featureCollectionXmlJson;
