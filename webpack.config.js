@@ -10,8 +10,7 @@ module.exports = {
     output: {
         // The compiled and minified file will be saved in the current directory and named
         // as bundle.js. Which will then be used in index.html
-        path: __dirname,
-        publicPath: '/',
+        path: __dirname + '/dist',
         filename: 'WFSEdit.js'
     },
     resolve: {
@@ -29,7 +28,7 @@ module.exports = {
     },
     plugins: [
       new webpack.optimize.CommonsChunkPlugin(
-        chunckName="vendor", filename= '/vendor.js'
+        chunckName="vendor", filename= 'vendor.js'
       )
     ]
 }
