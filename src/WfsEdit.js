@@ -1,3 +1,17 @@
+/**
+ * @author Chandan Rana (rc_chandan)
+ */
+
+/**
+ * @module WFSEdit
+ * Adds the WFSEdit object to browser window with insert, update and delete wfs functionalities
+ * @param {object} window - global object for browsers
+ * @param {object} geoJsonToGml - library to convert geoJson to gml see: ./geoJsonToGml.js
+ * This module depends on the following npm modules
+ * @param {object} axios - async xhr library see : https://www.npmjs.com/package/axios
+ * @param {function} xml - library to convert json obj to xml and vice versa see : https://www.npmjs.com/package/xml
+**/
+
 let axios = require("axios");
 let xml = require("xml");
 let geoJsonToGml = require("./geoJsonToGml");
@@ -6,7 +20,9 @@ let geoJsonToGml = require("./geoJsonToGml");
   "user strict";
 
   let VERSION = "0.0.1";
-  let HOST = "http://localhost:19090";
+
+  // TODO: Host needs to be changed according to the config of WFS server
+  let HOST = "http://" + window.location.host;
 
   if(axios === "undefined")
     throw new Error("axios lib not found");
@@ -143,6 +159,12 @@ let geoJsonToGml = require("./geoJsonToGml");
     return xml(WFSTransactionRequestXML, true);
   }
 
+  /**
+   * Converts the provided geoJson to gml insert request
+   * and send a xhr post with insert request to the WFS server.
+   * @param {string} typeName - data store to send the request ex: 'georbis:world_boundaries'
+   * @param {object} geoJson - the geoJson feature data that needs to be inserted.
+  **/
   let insertFeature = function (typeName, geoJson) {
     let reqBody = _createWFSRequest("Insert", typeName, undefined, geoJson);
     let url = HOST + "/wfs";
@@ -160,6 +182,13 @@ let geoJsonToGml = require("./geoJsonToGml");
     });
   }
 
+  /**
+   * Converts the provided geoJson to gml update request
+   * and send a xhr post with update request to the WFS server.
+   * @param {string} typeName - data store to send the request ex: 'georbis:world_boundaries'
+   * @param {string} fid - fid of the feature that needs to be updated
+   * @param {object} geoJson - the geoJson feature data that needs to be inserted.
+  **/
   let updateFeature = function (typeName, fid, geoJson) {
     let reqBody = _createWFSRequest("Update", typeName, fid, geoJson);
     let url = HOST + "/wfs";
@@ -176,7 +205,12 @@ let geoJsonToGml = require("./geoJsonToGml");
     });
   }
 
-
+  /**
+   * Converts the provided geoJson to gml delete request
+   * and send a xhr post with delete request to the WFS server.
+   * @param {string} typeName - data store in which deletion will be performed ex: 'georbis:world_boundaries'
+   * @param {string} fid - fid of the feature that needs to be deleted
+  **/
   let deleteFeature = function (typeName, fid) {
     let reqBody = _createWFSRequest("Delete", typeName, fid, undefined);
     let url = HOST + "/wfs";

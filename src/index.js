@@ -36,7 +36,6 @@ var geoJson = {
 
 var typeName = "georbis:world_boundaries";
 var fid = "world_boundaries.336";
-
 window.WFSEdit.delete(typeName, fid);
 // window.WFSEdit.update(typeName, fid, geoJson);
- // window.WFSEdit.insert(typeName, geoJson);
+// window.WFSEdit.insert(typeName, geoJson);

@@ -1,3 +1,18 @@
+/**
+ * @author Chandan Rana (rc_chandan)
+ */
+
+/**
+ * @module geoJsonToGml
+ * Converts geoJson objects to gml json format,
+ * which can be parsed by xml parser to create gml data
+**/
+
+/**
+ * Converts the provided geoJson to gmlJson object, which can then be parsed by xml library to create gml.
+ * @param {object} geoJson - the geoJson feature data to convert.
+ * @param {string} typeName - data store to send the request ex: 'georbis:world_boundaries'
+**/
 function convertToGml(geoJson, typeName) {
   var typeName = typeName || "wfs:features";
 
@@ -31,7 +46,11 @@ function convertToGml(geoJson, typeName) {
     return featureCollectionXmlJson;
 }
 
-
+/**
+ * Only converts the geometry part of single geoJson feature object to gmlJson object, which can then be parsed by xml  * library to make only the geom node in gml.
+ * @param {object} geometry - The geometry part of the geoJson.
+ * @param {string} vectorType - Type of vector feature ex: 'point', 'linestring', 'polygon'
+**/
 function getGeomXmlJson (vectorType, geometry) {
   let geomXmlJson = _getBaseGeomXmlJson(vectorType);
   let coordinates = [];
@@ -131,7 +150,6 @@ function _getCoordinateStr(coordinates) {
   coordinateStr = coordinateStr.slice(0, coordinateStr.length - 1);
   return coordinateStr;
 }
-
 
 function _getBaseGeomXmlJson(vectorType) {
   let geomXmlJson = {
