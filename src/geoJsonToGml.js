@@ -1,4 +1,4 @@
-function geoJsonToGml(geoJson, typeName) {
+function convertToGml(geoJson, typeName) {
   var typeName = typeName || "wfs:features";
 
     // The base featureCollection xmlJson
@@ -33,22 +33,19 @@ function geoJsonToGml(geoJson, typeName) {
 
 
 function getGeomXmlJson (vectorType, geometry) {
-  let geomXmlJson = getBaseGeomXmlJson(vectorType);
+  let geomXmlJson = _getBaseGeomXmlJson(vectorType);
   let coordinates = [];
   if(vectorType.toLowerCase() === "point")
     coordinates.push(geometry.coordinates);
   else
     coordinates = geometry.coordinates[0]
 
-  let coordinatesArr = getCoordinateArrayLocation(vectorType, geomXmlJson);
-  coordinatesArr.push(getCoordinateStr(coordinates));
+  let coordinatesArr = _getCoordinateArrayLocation(vectorType, geomXmlJson);
+  coordinatesArr.push(_getCoordinateStr(coordinates));
   return geomXmlJson;
 }
 
-
-
-
-function getCoordinateArrayLocation(vectorType, geomXmlJson) {
+function _getCoordinateArrayLocation(vectorType, geomXmlJson) {
   let coordinatesArr = null;
   switch(vectorType.toLowerCase()) {
     case "point":
@@ -64,7 +61,7 @@ function getCoordinateArrayLocation(vectorType, geomXmlJson) {
   return coordinatesArr;
 }
 
-function getVectorXmlJson (vectorType) {
+function _getVectorXmlJson (vectorType) {
   let pointSkeliton = {
     "gml:Point": [
       { "_attr": {"srsName": "EPSG:4326"}},
@@ -122,7 +119,7 @@ function getVectorXmlJson (vectorType) {
   return vectorData;
 }
 
-function getCoordinateStr(coordinates) {
+function _getCoordinateStr(coordinates) {
   let coordinateStr = "";
   for(let pair in coordinates) {
     for(let num in coordinates[pair]){
@@ -136,7 +133,7 @@ function getCoordinateStr(coordinates) {
 }
 
 
-function getBaseGeomXmlJson(vectorType) {
+function _getBaseGeomXmlJson(vectorType) {
   let geomXmlJson = {
     "geom" : [
       {
@@ -144,13 +141,13 @@ function getBaseGeomXmlJson(vectorType) {
       }
       // geomSkeliton will be added here with proper geometry type
   ]};
-  let vectorData =  getVectorXmlJson(vectorType);
+  let vectorData =  _getVectorXmlJson(vectorType);
   geomXmlJson["geom"].push(vectorData);
 
   return geomXmlJson;
 }
 
 module.exports = {
-  convertToGml: geoJsonToGml,
-  getGeomForUpdate: getGeomXmlJson
+  convertToGml: convertToGml,
+  getGeomXmlJson: getGeomXmlJson
 };

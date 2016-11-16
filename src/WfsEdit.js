@@ -14,7 +14,7 @@ let geoJsonToGml = require("./geoJsonToGml");
   if(xml === "undefined")
     throw new Error("xml lib not found");
 
-  let getTransactionXmlJson = function (operation, WFSOperationBaseXML) {
+  let _getTransactionXmlJson = function (operation, WFSOperationBaseXML) {
 
     let transactionXML = null;
     if(operation.toLowerCase() === "insert"){
@@ -59,7 +59,7 @@ let geoJsonToGml = require("./geoJsonToGml");
       return transactionXML;
   };
 
-  let buildFilterXML = function (fid) {
+  let _buildFilterXML = function (fid) {
     let filterQuery = {
       "ogc:Filter": [
         {
@@ -78,25 +78,25 @@ let geoJsonToGml = require("./geoJsonToGml");
     return filterQuery;
   }
 
-  let buildUpdateFeatureXML = function (feature) {
+  let _buildUpdateFeatureXML = function (feature) {
     var propertyXML = {"wfs:Property": [{"_attr": {}}]};
     propertyXML["wfs:Property"].push({"wfs:Name": feature.name});
     propertyXML["wfs:Property"].push({"wfs:Value": feature.value});
     return propertyXML;
   }
 
-  let buildInsertFeatureXML = function (geoJson, typeName) {
+  let _buildInsertFeatureXML = function (geoJson, typeName) {
     return geoJsonToGml.convertToGml(geoJson, typeName);
   }
 
-  let buildOpertaionXML = function (operation, typeName, fid, geoJson) {
+  let _buildOpertaionXML = function (operation, typeName, fid, geoJson) {
     let operationXML, filterQuery, featureQuery;
     if(typeof fid !== "undefined") {
-      filterQuery = buildFilterXML(fid);
+      filterQuery = _buildFilterXML(fid);
     }
 
     if(typeof geoJson !== "undefined" && operation.toLowerCase() === "insert")
-      gmlQuery = buildInsertFeatureXML(geoJson, typeName);
+      gmlQuery = _buildInsertFeatureXML(geoJson, typeName);
 
     switch (operation.toLowerCase()) {
       case "insert":
@@ -108,7 +108,7 @@ let geoJsonToGml = require("./geoJsonToGml");
         let properties = geoJson.features[0].properties;
         for(prop in properties) {
           if(properties.hasOwnProperty(prop)){
-            gmlQuery = buildUpdateFeatureXML((function (geoJson, prop) {
+            gmlQuery = _buildUpdateFeatureXML((function (geoJson, prop) {
               let featureObj = {name: prop, value: properties[prop]};
               return featureObj;
             }(properties, prop)));
@@ -119,10 +119,9 @@ let geoJsonToGml = require("./geoJsonToGml");
         if(typeof geoJson.features[0].geometry === "object") {
           let geom = geoJson.features[0].geometry;
           let vectorType = geom.type;
-          // let geomQuery = geoJsonToGml.getGeomForUpdate(vectorType);
-          let geomQuery = geoJsonToGml.getGeomForUpdate(vectorType, geom);
+          let geomQuery = geoJsonToGml.getGeomXmlJson(vectorType, geom);
           console.log(JSON.stringify(geomQuery));
-          operationXML["wfs:Update"].push(buildUpdateFeatureXML({name: "geom", value: [geomQuery.geom[1]]}));
+          operationXML["wfs:Update"].push(_buildUpdateFeatureXML({name: "geom", value: [geomQuery.geom[1]]}));
         }
 
         operationXML["wfs:Update"].push(filterQuery);
@@ -137,15 +136,15 @@ let geoJsonToGml = require("./geoJsonToGml");
     return operationXML;
   }
 
-  let createWFSRequest = function (operation, typeName, fid, geoJson) {
-    let WFSOperationBaseXML = buildOpertaionXML(operation, typeName, fid, geoJson, typeName);
-    let WFSTransactionRequestXML = getTransactionXmlJson(operation, WFSOperationBaseXML);
+  let _createWFSRequest = function (operation, typeName, fid, geoJson) {
+    let WFSOperationBaseXML = _buildOpertaionXML(operation, typeName, fid, geoJson, typeName);
+    let WFSTransactionRequestXML = _getTransactionXmlJson(operation, WFSOperationBaseXML);
     console.log(xml(WFSTransactionRequestXML, true));
     return xml(WFSTransactionRequestXML, true);
   }
 
   let insertFeature = function (typeName, geoJson) {
-    let reqBody = createWFSRequest("Insert", typeName, undefined, geoJson);
+    let reqBody = _createWFSRequest("Insert", typeName, undefined, geoJson);
     let url = HOST + "/wfs";
     let params = {
       data: reqBody,
@@ -162,7 +161,7 @@ let geoJsonToGml = require("./geoJsonToGml");
   }
 
   let updateFeature = function (typeName, fid, geoJson) {
-    let reqBody = createWFSRequest("Update", typeName, fid, geoJson);
+    let reqBody = _createWFSRequest("Update", typeName, fid, geoJson);
     let url = HOST + "/wfs";
     let params = {
       data: reqBody,
@@ -179,7 +178,7 @@ let geoJsonToGml = require("./geoJsonToGml");
 
 
   let deleteFeature = function (typeName, fid) {
-    let reqBody = createWFSRequest("Delete", typeName, fid, undefined);
+    let reqBody = _createWFSRequest("Delete", typeName, fid, undefined);
     let url = HOST + "/wfs";
     let params = {
       data: reqBody,

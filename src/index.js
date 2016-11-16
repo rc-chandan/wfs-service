@@ -22,11 +22,11 @@ var geoJson = {
         "type": "Polygon",
         "coordinates": [
           [
-            [55.0,2.0],
+            [60.0,2.0],
             [65.0,2.0],
             [65.0,5.0],
-            [55.0,5.0],
-            [55.0,2.0]
+            [60.0,5.0],
+            [60.0,2.0]
           ]
         ]
       }
@@ -35,7 +35,7 @@ var geoJson = {
 };
 
 var typeName = "georbis:world_boundaries";
-var fid = "world_boundaries.335";
+var fid = "world_boundaries.336";
 
 window.WFSEdit.delete(typeName, fid);
 // window.WFSEdit.update(typeName, fid, geoJson);
